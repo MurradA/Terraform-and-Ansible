@@ -1,0 +1,67 @@
+- name: Check connection to server
+  uri:
+    url: "http://{{ groups['servers'][0] }}:8080"
+  register: result
+  until: result.status == 200
+  retries: 10
+  delay: 5
+
+- name: Get instance info
+  ec2_instance_info:
+    filters:
+      dns-name: "{{ groups['servers'][0] }}"
+  register: ec2instance
+
+- name: Show info
+  debug:
+    msg: "{{ ec2instance.instances[0] }}"
+
+- name: Find old prior image
+  ec2_ami_info:
+    filters:
+      name: "{{ prior_ami_name }}"
+  register: old_prior_ami
+
+- name: Delete old prior image
+  ec2_ami:
+    image_id: "{{ old_prior_ami.images[0].image_id }}"
+    delete_snapshot: True
+    state: absent
+  when: old_prior_ami.images | length == 1
+
+- name: Find old working image
+  ec2_ami_info:
+    filters:
+      name: "{{ ami_name }}"
+  register: old_working_ami
+
+- name: Copy old working image to prior
+  ec2_ami_copy:
+    source_region: "{{ aws_region }}"
+    region: "{{ aws_region }}"
+    source_image_id: "{{ old_working_ami.images[0].image_id }}"
+    name: "{{ prior_ami_name }}"
+    description: "Image for the PC build on {{ old_working_ami.images[0].creation_date }}"
+    tags:
+        Name: "{{ prior_ami_name }}"
+        Date: "{{ old_working_ami.images[0].creation_date }}"
+  when: old_working_ami.images | length == 1
+
+- name: Delete old working image
+  ec2_ami:
+    image_id: "{{ old_working_ami.images[0].image_id }}"
+    delete_snapshot: True
+    state: absent
+  when: old_working_ami.images | length == 1
+
+- name: Make image
+  ec2_ami:
+    instance_id: "{{ ec2instance.instances[0].instance_id }}"
+    wait: yes
+    name: "{{ ami_name }}"
+    description: "Image for the PC build on {{ ec2instance.instances[0].launch_time }}"
+    tags:
+      Name: "{{ ami_name }}"
+      Project: "{{ ami_project_tag }}"
+      Date: "{{ ec2instance.instances[0].launch_time }}"
+  when: ec2instance.instances | length == 1

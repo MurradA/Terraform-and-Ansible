@@ -1,0 +1,5 @@
+ansible_ssh_common_args: -o StrictHostKeyChecking=no
+ansible_ssh_private_key_file: "{{ lookup('env', 'SSH_ANSIBLE_PRIVATE') }}"
+ansible_ssh_user: ec2-user
+project_name: ALAcademy2020
+aws_environment: dev

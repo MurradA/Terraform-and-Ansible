@@ -1,0 +1,60 @@
+- name: Install pip
+  package:
+    name: python2-pip
+    state: latest
+
+- name: Install boto
+  pip:
+    name:
+      - boto
+      - boto3
+      - botocore
+
+- name: Creates directory /opt/petclinic
+  file:
+    path: /opt/petclinic
+    state: directory
+
+- name: Get petclinic.jar
+  aws_s3:
+    bucket: "{{ s3_bucket }}"
+    object: petclinic.jar
+    dest: /opt/petclinic/petclinic.jar
+    mode: get
+
+- name: Get app.props
+  aws_s3:
+    bucket: "{{ s3_bucket }}"
+    object: "{{ app_prop_name }}"
+    dest: /opt/petclinic/application.properties
+    mode: get
+
+- name: Copy up pcInit file
+  copy:
+    src: files/pcInit
+    dest: /etc/init.d/petclinic
+    mode: '0755'
+
+- name: Start petclinic
+  service:
+    name: petclinic
+    state: started
+    enabled: yes
+
+# - name: Wait for Petclinic to start up
+- block:
+    - name: Wait for Petclinic to start up
+      wait_for:
+        path: /var/log/petclinic.log
+        search_regex: Started PetClinicApplication
+        delay: 10
+  rescue:
+    - debug:
+        msg: "Petclinic did not start"
+    - aws_s3:
+        bucket: theladsbucket
+        object: latestPCfail.log
+        src: /var/log/petclinic.log
+        mode: put
+    - fail:
+        msg: "Failing now"

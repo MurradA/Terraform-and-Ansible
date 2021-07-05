@@ -1,0 +1,5 @@
+ansible_python_interpreter: "{{ lookup('env','PYTHON_INTERPRETER') }}"
+aws_region: "{{ lookup('env','AWS_DEFAULT_REGION') }}"
+ami_name: pcImage
+prior_ami_name: priorPcImage
+ami_project_tag: A3lads

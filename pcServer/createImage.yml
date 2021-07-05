@@ -1,0 +1,20 @@
+- hosts: aws
+  connection: local
+  gather_facts: no
+  roles:
+    - create_instance
+
+- hosts: servers
+  become: true
+  gather_facts: yes
+  roles:
+    - role: ansible-role-java
+      become: yes
+    - role: provision_instance
+      become: yes
+
+- hosts: ami
+  connection: local
+  gather_facts: no
+  roles:
+    - make_image

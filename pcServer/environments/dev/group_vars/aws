@@ -1,0 +1,11 @@
+ansible_python_interpreter: "{{ lookup('env','PYTHON_INTERPRETER') }}"
+aws_key_name: "{{ lookup('env','AWS_SSH_KEY') }}"
+ec2_type: t2.micro
+image_id: ami-0323c3dd2da7fb37d
+aws_region: "{{ lookup('env','AWS_DEFAULT_REGION') }}"
+subnet_id: subnet-0584c6818882aa609
+secgrpids:
+  - sg-040ef8f2bc984c189
+  - sg-063702070f4c896a2
+instance_name: pcServer
+iam_role: ec2_profile

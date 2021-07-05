@@ -1,0 +1,38 @@
+#!/bin/bash
+# chkconfig: 345 90 90
+# description: Manage PetClinic
+
+### BEGIN INIT INFO
+# Provides:          PetClinic
+# Required-Start:    $local_fs $network $named $time $syslog
+# Required-Stop:     $local_fs $network $named $time $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Description:       Manage PetClinic
+### END INIT INFO
+
+case $1 in
+  start)  # Start Vault
+          cd /opt/petclinic
+          nohup java -jar petclinic.jar >>/var/log/petclinic.log 2>>/var/log/petclinic.err &
+          ps -ef | grep -v grep | grep 'petclinic.jar' | awk '{print $2}' >/var/run/petclinic.pid
+          ;;
+  stop)   # Kill you script here
+      	  if [ -e /var/run/petclinic.pid ]
+      	  then
+                	kill $(cat /var/run/petclinic.pid)
+      	  fi
+          ;;
+  status) # Show something useful
+          ps -ef | grep -v grep | grep 'petclinic.jar' >/dev/null 2>/dev/null
+      	  if (( $? == 0 ))
+      	  then
+      		    echo "PetClinic is running"
+      	  else
+      		    echo "PetClinic is not running"
+      	  fi
+          ;;
+  *) # Some default message
+     echo "Use either start, stop or status"
+     ;;
+esac

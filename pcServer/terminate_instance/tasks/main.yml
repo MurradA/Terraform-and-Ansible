@@ -1,0 +1,24 @@
+- name: Get instance info
+  ec2_instance_info:
+    filters:
+      dns-name: "{{ groups['servers'][0] }}"
+  register: ec2instance
+
+- name: Show info
+  debug:
+    msg: "{{ item.instance_id }}"
+  with_items: "{{ ec2instance.instances }}"
+
+- name: Terminate instances
+  ec2:
+    state: absent
+    instance_ids:
+      - "{{ item.instance_id }}"
+  with_items: "{{ ec2instance.instances }}"
+
+- name: Remove instance from inventory
+  lineinfile:
+    dest: "{{ playbook_dir }}/environments/{{ aws_environment }}/hosts"
+    state: absent
+    regexp: "{{ groups['servers'][0] }}"
+    backup: yes

@@ -1,0 +1,5 @@
+- hosts: aws
+  connection: local
+  gather_facts: no
+  roles:
+    - terminate_instance
